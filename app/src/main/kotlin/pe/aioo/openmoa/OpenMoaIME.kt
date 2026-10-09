@@ -138,7 +138,7 @@ class OpenMoaIME : InputMethodService(), KoinComponent {
                                     composingText = composingText.substring(
                                         0, composingText.length - unresolved.length
                                     )
-                                    hangulAssembler.removeLastJamo()
+                                    hangulAssembler.backspace()
                                     hangulAssembler.getUnresolved()?.let {
                                         composingText += it
                                     }

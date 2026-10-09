@@ -7,6 +7,8 @@ class HangulAssembler {
 
     private val jamoList = arrayListOf<String>()
     private val moeumHistory = ArrayDeque<String>()
+    // After deleting a final consonant, keep decomposing this syllable one step at a time.
+    private var deletedJongseong = false
 
     private fun assembleLastJongseongIfCan(jamo: String): Boolean {
         if (!jamo.matches(JAEUM_REGEX) || jamoList.size != 3) {
@@ -167,11 +169,13 @@ class HangulAssembler {
                     jamoList.removeFirst()
                 }
                 moeumHistory.clear()
+                deletedJongseong = false
                 return assembled.substring(0, 1)
             }
             if (forceResolve) {
                 jamoList.clear()
                 moeumHistory.clear()
+                deletedJongseong = false
                 return assembled
             }
             return null
@@ -186,6 +190,7 @@ class HangulAssembler {
                 jamoList.removeFirst()
             }
             moeumHistory.clear()
+            deletedJongseong = false
             return resolved
         }
     }
@@ -226,7 +231,17 @@ class HangulAssembler {
         }
     }
 
-    fun removeLastJamo() {
+    fun backspace() {
+        val syllable = getUnresolved()?.singleOrNull()
+        if (syllable != null && syllable in '가'..'힣') {
+            if (jamoList.size == 2 && !deletedJongseong) {
+                clear()
+                return
+            }
+            if (jamoList.size == 3) {
+                deletedJongseong = true
+            }
+        }
         val lastJamo = jamoList.lastOrNull() ?: return
         val leading = when (lastJamo) {
             "ㄳ" -> "ㄱ"
@@ -242,11 +257,13 @@ class HangulAssembler {
         } else {
             jamoList.removeLastOrNull()
         }
+        if (jamoList.isEmpty()) clear()
     }
 
     fun clear() {
         jamoList.clear()
         moeumHistory.clear()
+        deletedJongseong = false
     }
 
     companion object {
