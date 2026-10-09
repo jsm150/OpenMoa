@@ -6,6 +6,7 @@ import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import org.koin.core.component.KoinComponent
@@ -13,6 +14,7 @@ import org.koin.core.component.inject
 import pe.aioo.openmoa.OpenMoaIME
 import pe.aioo.openmoa.R
 import pe.aioo.openmoa.config.Config
+import pe.aioo.openmoa.view.KeyboardFrameLayout
 import pe.aioo.openmoa.view.message.BaseKeyMessage
 import pe.aioo.openmoa.view.message.SpecialKeyMessage
 import pe.aioo.openmoa.view.message.StringKeyMessage
@@ -31,19 +33,30 @@ open class BaseKeyTouchListener(context: Context) : OnTouchListener, KoinCompone
         when (motionEvent.action) {
             MotionEvent.ACTION_DOWN -> {
                 view.background = backgrounds[0]
+                showPreview(view)
                 if (config.hapticFeedback) {
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_PRESS)
                 }
             }
             MotionEvent.ACTION_CANCEL -> {
+                KeyboardFrameLayout.from(view)?.dismissKeyPreview(view)
                 view.background = backgrounds[1]
             }
+            MotionEvent.ACTION_MOVE -> showPreview(view)
             MotionEvent.ACTION_UP -> {
+                KeyboardFrameLayout.from(view)?.dismissKeyPreview(view)
                 view.background = backgrounds[1]
                 view.performClick()
             }
         }
         return true
+    }
+
+    protected open fun previewText(view: View): CharSequence? =
+        (view as? TextView)?.text?.takeIf { it.length == 1 && !it.isBlank() }
+
+    private fun showPreview(view: View) {
+        previewText(view)?.let { KeyboardFrameLayout.from(view)?.showKeyPreview(view, it) }
     }
 
     protected fun sendKeyMessage(keyMessage: BaseKeyMessage) {

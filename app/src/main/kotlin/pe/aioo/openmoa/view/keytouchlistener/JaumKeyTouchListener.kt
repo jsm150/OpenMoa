@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
 import android.view.View
+import com.github.kimkevin.hangulparser.HangulParser
 import pe.aioo.openmoa.hangul.MoeumGestureProcessor
 import pe.aioo.openmoa.view.message.StringKeyMessage
 import kotlin.math.*
@@ -16,6 +17,9 @@ class JaumKeyTouchListener(
     private var startX: Float = 0f
     private var startY: Float = 0f
     private val moeumGestureProcessor = MoeumGestureProcessor()
+
+    override fun previewText(view: View): CharSequence =
+        moeumGestureProcessor.peekMoeum()?.let { HangulParser.assemble(listOf(key, it)) } ?: key
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
@@ -54,6 +58,7 @@ class JaumKeyTouchListener(
                     sendKeyMessage(StringKeyMessage(it))
                 }
             }
+            MotionEvent.ACTION_CANCEL -> moeumGestureProcessor.clear()
         }
         return super.onTouch(view, motionEvent)
     }

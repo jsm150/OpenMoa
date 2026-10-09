@@ -511,10 +511,21 @@ class OpenMoaIME : InputMethodService(), KoinComponent {
     }
 
     override fun onDestroy() {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
         if (this::broadcastReceiver.isInitialized) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
         }
         super.onDestroy()
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
+        super.onFinishInputView(finishingInput)
+    }
+
+    override fun onWindowHidden() {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
+        super.onWindowHidden()
     }
 
     @SuppressLint("RestrictedApi")

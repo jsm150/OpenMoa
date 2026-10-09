@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -14,6 +15,7 @@ import org.koin.core.component.inject
 import pe.aioo.openmoa.OpenMoaIME
 import pe.aioo.openmoa.R
 import pe.aioo.openmoa.config.Config
+import pe.aioo.openmoa.view.KeyboardFrameLayout
 import pe.aioo.openmoa.view.message.SpecialKey
 import pe.aioo.openmoa.databinding.OpenMoaViewBinding
 import pe.aioo.openmoa.view.keytouchlistener.CrossKeyTouchListener
@@ -44,6 +46,7 @@ class OpenMoaView : ConstraintLayout, KoinComponent {
     private val broadcastManager = LocalBroadcastManager.getInstance(context)
     private lateinit var binding: OpenMoaViewBinding
     private var touchedMoeum: String? = null
+    private var touchedMoeumKey: View? = null
     private val backgrounds = listOf(
         ContextCompat.getDrawable(context, R.drawable.key_background_pressed),
         ContextCompat.getDrawable(context, R.drawable.key_background),
@@ -141,6 +144,7 @@ class OpenMoaView : ConstraintLayout, KoinComponent {
                                     }
                                 }
                                 touchedMoeum = "ㅣ"
+                                showMoeumPreview(this, "ㅣ")
                                 return true
                             }
                         }
@@ -160,6 +164,7 @@ class OpenMoaView : ConstraintLayout, KoinComponent {
                                     }
                                 }
                                 touchedMoeum = "ㅡ"
+                                showMoeumPreview(this, "ㅡ")
                                 return true
                             }
                         }
@@ -179,6 +184,7 @@ class OpenMoaView : ConstraintLayout, KoinComponent {
                                     }
                                 }
                                 touchedMoeum = "ㆍ"
+                                showMoeumPreview(this, "ㆍ")
                                 return true
                             }
                         }
@@ -187,19 +193,36 @@ class OpenMoaView : ConstraintLayout, KoinComponent {
                 }
                 MotionEvent.ACTION_UP -> {
                     if (moeum != null) {
-                        binding.iKey.background = backgrounds[1]
-                        binding.euKey.background = backgrounds[1]
-                        binding.araeaKey.background = backgrounds[1]
                         sendKeyMessage(StringKeyMessage(moeum))
-                        touchedMoeum = null
+                        clearMoeumTouch()
                         return true
                     }
                     Unit
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (moeum != null) {
+                        clearMoeumTouch()
+                        return true
+                    }
                 }
                 else -> Unit
             }
         }
         return super.dispatchTouchEvent(ev)
+    }
+
+    private fun showMoeumPreview(key: View, text: String) {
+        touchedMoeumKey = key
+        KeyboardFrameLayout.from(this)?.showKeyPreview(key, text)
+    }
+
+    private fun clearMoeumTouch() {
+        binding.iKey.background = backgrounds[1]
+        binding.euKey.background = backgrounds[1]
+        binding.araeaKey.background = backgrounds[1]
+        touchedMoeumKey?.let { KeyboardFrameLayout.from(this)?.dismissKeyPreview(it) }
+        touchedMoeum = null
+        touchedMoeumKey = null
     }
 
     private fun sendKeyMessage(keyMessage: StringKeyMessage) {

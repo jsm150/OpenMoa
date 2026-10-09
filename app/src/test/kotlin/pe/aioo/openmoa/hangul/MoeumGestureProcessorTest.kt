@@ -6,6 +6,18 @@ import org.junit.Test
 class MoeumGestureProcessorTest {
 
     @Test
+    fun previewDoesNotConsumeCompoundGesture() {
+        val processor = MoeumGestureProcessor()
+        processor.appendMoeum("ㅗ")
+        Assert.assertEquals("ㅗ", processor.peekMoeum())
+        Assert.assertEquals("ㅗ", processor.peekMoeum())
+        processor.appendMoeum("ㅏ")
+        Assert.assertEquals("ㅘ", processor.peekMoeum())
+        Assert.assertEquals("ㅘ", processor.resolveMoeumList())
+        Assert.assertNull(processor.peekMoeum())
+    }
+
+    @Test
     fun testYaGesture() {
         val processor = MoeumGestureProcessor()
         processor.appendMoeum("ㅏ")

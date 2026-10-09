@@ -13,6 +13,13 @@ class MoeumGestureProcessor {
     }
 
     fun resolveMoeumList(): String? {
+        val moeum = peekMoeum()
+        clear()
+        return moeum
+    }
+
+    // Reading a preview must not consume the gesture before ACTION_UP commits it.
+    fun peekMoeum(): String? {
         var moeum: String? = null
         for (nextMoeum in moeumList) {
             moeum = when (moeum) {
@@ -158,7 +165,6 @@ class MoeumGestureProcessor {
                 else -> moeum
             }
         }
-        moeumList.clear()
         return moeum?.substring(0, 1)
     }
 
