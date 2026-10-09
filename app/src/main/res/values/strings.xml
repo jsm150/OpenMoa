@@ -1,6 +1,7 @@
 <resources>
 
     <string name="app_name">오픈모아</string>
+    <string name="cursor_move_mode">커서 이동</string>
     <string name="key_araea">ㆍ</string>
     <string name="key_area_select">영역선택</string>
     <string name="key_arrow">방향키</string>

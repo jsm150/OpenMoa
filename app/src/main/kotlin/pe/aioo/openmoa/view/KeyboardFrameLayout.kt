@@ -26,12 +26,32 @@ class KeyboardFrameLayout : FrameLayout {
 
     private lateinit var binding: KeyboardFrameLayoutBinding
     private val keyPreview = KeyPreviewPopup(context)
+    private var cancelCursorGesture: (() -> Unit)? = null
 
     fun showKeyPreview(key: View, text: CharSequence) = keyPreview.show(key, text)
 
     fun dismissKeyPreview(key: View? = null) = keyPreview.dismiss(key)
 
+    fun beginCursorGesture(onCancel: () -> Unit) {
+        dismissCursorMode()
+        cancelCursorGesture = onCancel
+    }
+
+    fun showCursorMode() {
+        if (cancelCursorGesture == null) return
+        dismissKeyPreview()
+        binding.cursorModeOverlay.visibility = View.VISIBLE
+    }
+
+    fun dismissCursorMode() {
+        binding.cursorModeOverlay.visibility = View.GONE
+        val cancel = cancelCursorGesture
+        cancelCursorGesture = null
+        cancel?.invoke()
+    }
+
     override fun onDetachedFromWindow() {
+        dismissCursorMode()
         dismissKeyPreview()
         super.onDetachedFromWindow()
     }
@@ -42,6 +62,7 @@ class KeyboardFrameLayout : FrameLayout {
     }
 
     fun setKeyboardView(view: View) {
+        dismissCursorMode()
         dismissKeyPreview()
         view.parent?.let {
             if (it is ViewGroup) {

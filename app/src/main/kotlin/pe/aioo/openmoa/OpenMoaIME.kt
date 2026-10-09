@@ -42,8 +42,10 @@ import pe.aioo.openmoa.databinding.OpenMoaImeBinding
 import pe.aioo.openmoa.hangul.HangulAssembler
 import pe.aioo.openmoa.view.keyboardview.*
 import pe.aioo.openmoa.view.keyboardview.qwerty.QuertyView
+import pe.aioo.openmoa.view.message.CursorMoveMessage
 import pe.aioo.openmoa.view.message.SpecialKey
 import java.io.Serializable
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 class OpenMoaIME : InputMethodService(), KoinComponent {
@@ -124,6 +126,19 @@ class OpenMoaIME : InputMethodService(), KoinComponent {
         super.onCreate()
         broadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
+                getKeyFromIntent<CursorMoveMessage>(intent)?.let { message ->
+                    if (currentInputConnection == null || message.steps == 0) return
+                    finishComposing()
+                    val keyCode = if (message.steps < 0) {
+                        KeyEvent.KEYCODE_DPAD_LEFT
+                    } else {
+                        KeyEvent.KEYCODE_DPAD_RIGHT
+                    }
+                    repeat(abs(message.steps)) { sendKeyDownUpEvent(keyCode) }
+                    setShiftAutomatically()
+                    // Do not write the old composing buffer at the new cursor position.
+                    return
+                }
                 val key = getKeyFromIntent<String>(intent)
                     ?: getKeyFromIntent<SpecialKey>(intent)
                     ?: return
@@ -511,6 +526,7 @@ class OpenMoaIME : InputMethodService(), KoinComponent {
     }
 
     override fun onDestroy() {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissCursorMode()
         if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
         if (this::broadcastReceiver.isInitialized) {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver)
@@ -519,11 +535,13 @@ class OpenMoaIME : InputMethodService(), KoinComponent {
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissCursorMode()
         if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
         super.onFinishInputView(finishingInput)
     }
 
     override fun onWindowHidden() {
+        if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissCursorMode()
         if (this::binding.isInitialized) binding.keyboardFrameLayout.dismissKeyPreview()
         super.onWindowHidden()
     }

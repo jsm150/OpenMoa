@@ -16,6 +16,7 @@ import pe.aioo.openmoa.R
 import pe.aioo.openmoa.config.Config
 import pe.aioo.openmoa.view.KeyboardFrameLayout
 import pe.aioo.openmoa.view.message.BaseKeyMessage
+import pe.aioo.openmoa.view.message.CursorMoveMessage
 import pe.aioo.openmoa.view.message.SpecialKeyMessage
 import pe.aioo.openmoa.view.message.StringKeyMessage
 
@@ -39,13 +40,11 @@ open class BaseKeyTouchListener(context: Context) : OnTouchListener, KoinCompone
                 }
             }
             MotionEvent.ACTION_CANCEL -> {
-                KeyboardFrameLayout.from(view)?.dismissKeyPreview(view)
-                view.background = backgrounds[1]
+                resetKey(view)
             }
             MotionEvent.ACTION_MOVE -> showPreview(view)
             MotionEvent.ACTION_UP -> {
-                KeyboardFrameLayout.from(view)?.dismissKeyPreview(view)
-                view.background = backgrounds[1]
+                resetKey(view)
                 view.performClick()
             }
         }
@@ -55,6 +54,11 @@ open class BaseKeyTouchListener(context: Context) : OnTouchListener, KoinCompone
     protected open fun previewText(view: View): CharSequence? =
         (view as? TextView)?.text?.takeIf { it.length == 1 && !it.isBlank() }
 
+    protected fun resetKey(view: View) {
+        KeyboardFrameLayout.from(view)?.dismissKeyPreview(view)
+        view.background = backgrounds[1]
+    }
+
     private fun showPreview(view: View) {
         previewText(view)?.let { KeyboardFrameLayout.from(view)?.showKeyPreview(view, it) }
     }
@@ -63,6 +67,7 @@ open class BaseKeyTouchListener(context: Context) : OnTouchListener, KoinCompone
         broadcastManager.sendBroadcast(
             Intent(OpenMoaIME.INTENT_ACTION).apply {
                 putExtra(OpenMoaIME.EXTRA_NAME, when (keyMessage) {
+                    is CursorMoveMessage -> keyMessage
                     is StringKeyMessage -> keyMessage.key
                     is SpecialKeyMessage -> keyMessage.key
                     else -> ""

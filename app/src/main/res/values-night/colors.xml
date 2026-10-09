@@ -7,5 +7,7 @@
     <color name="key_foreground">#FFFFFF</color>
     <color name="key_foreground_muted">#BBBBBB</color>
     <color name="key_foreground_locked">#5E97EE</color>
+    <color name="cursor_mode_label_background">#F2333333</color>
+    <color name="cursor_mode_foreground">#E0E0E0</color>
 
 </resources>
